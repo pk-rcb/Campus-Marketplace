@@ -16,6 +16,7 @@ function SellerCard({
   onOfferClick,
   chatLoading,
   showOfferButton,
+  hasOffer,
 }) {
   const { user } = useContext(AuthContext);
   const [phoneRevealed, setPhoneRevealed] = useState(false);
@@ -77,8 +78,14 @@ function SellerCard({
             </button>
           )}
           {onOfferClick && showOfferButton && (
-            <button type="button" className="sellerCardOfferBtn" onClick={onOfferClick}>
-              Make an Offer
+            <button 
+              type="button" 
+              className="sellerCardOfferBtn" 
+              onClick={hasOffer ? undefined : onOfferClick}
+              disabled={hasOffer}
+              style={hasOffer ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            >
+              {hasOffer ? 'Offer Sent' : 'Make an Offer'}
             </button>
           )}
         </div>

@@ -31,12 +31,22 @@ function NotificationProvider({ children }) {
       return;
     }
 
-    const list = data.map((d) => ({
-      ...d,
-      createdAt: d.created_at ? new Date(d.created_at).getTime() : 0,
-      imageUrl: d.image_url,
-      actionUrl: d.action_url,
-    }));
+    const list = data.map((d) => {
+      // Normalize the `data` JSON field from snake_case to camelCase
+      let normalizedData = d.data || {};
+      if (typeof normalizedData === 'string') {
+        try { normalizedData = JSON.parse(normalizedData); } catch { normalizedData = {}; }
+      }
+      if (normalizedData.offer_id && !normalizedData.offerId) normalizedData.offerId = normalizedData.offer_id;
+      if (normalizedData.product_id && !normalizedData.productId) normalizedData.productId = normalizedData.product_id;
+      return {
+        ...d,
+        data: normalizedData,
+        createdAt: d.created_at ? new Date(d.created_at).getTime() : 0,
+        imageUrl: d.image_url,
+        actionUrl: d.action_url,
+      };
+    });
 
     setNotifications(list);
     setUnreadCount(list.filter((n) => !n.read).length);
@@ -52,9 +62,9 @@ function NotificationProvider({ children }) {
     const userId = user.id || user.uid;
     fetchNotifications();
 
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes (channel name scoped per user)
     const channel = supabase
-      .channel('public:notifications')
+      .channel(`notifications:${userId}`)
       .on(
         'postgres_changes',
         {

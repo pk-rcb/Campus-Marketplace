@@ -25,8 +25,9 @@ function OfferProvider({ children }) {
       productImage: d.product_image,
       sellerId: d.seller_id,
       buyerId: d.buyer_id,
-      offerAmount: d.offer_amount,
+      offerAmount: d.amount,
       originalPrice: d.original_price,
+      counterAmount: d.counter_amount ?? null,
       message: d.message,
       paymentMethod: d.payment_method,
       deliveryPreference: d.delivery_preference,
@@ -55,12 +56,12 @@ function OfferProvider({ children }) {
     fetchOffers();
 
     const channelSent = supabase
-      .channel('public:offers:buyer')
+      .channel(`offers:buyer:${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'offers', filter: `buyer_id=eq.${userId}` }, fetchOffers)
       .subscribe();
 
     const channelReceived = supabase
-      .channel('public:offers:seller')
+      .channel(`offers:seller:${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'offers', filter: `seller_id=eq.${userId}` }, fetchOffers)
       .subscribe();
 

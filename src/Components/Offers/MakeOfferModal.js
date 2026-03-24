@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useCallback, useRef } from 'rea
 import { createOffer } from 'backend/config';
 import { AuthContext } from '../../contextStore/AuthContext';
 import { ToastContext } from '../../contextStore/ToastContext';
+import { OfferContext } from '../../contextStore/OfferContext';
 import { formatPrice } from '../../utils/formatters';
 import ButtonSpinner from '../UI/ButtonSpinner';
 import './MakeOfferModal.css';
@@ -28,6 +29,7 @@ const DELIVERY_OPTIONS = [
 function MakeOfferModal({ product, onClose, onSuccess }) {
   const { user } = useContext(AuthContext);
   const { addToast } = useContext(ToastContext);
+  const { sentOffers } = useContext(OfferContext) || {};
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -109,6 +111,14 @@ function MakeOfferModal({ product, onClose, onSuccess }) {
       addToast('Cannot make offer', 'error');
       return;
     }
+    
+    // Check for existing offer
+    const existingOffer = sentOffers?.find(o => o.productId === product.id);
+    if (existingOffer) {
+      addToast('You already have an active offer for this ad', 'error');
+      return;
+    }
+
     setLoading(true);
     createOffer({
       productId: product.id,

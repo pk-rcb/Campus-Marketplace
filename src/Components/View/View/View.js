@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 import { PostContext } from '../../../contextStore/PostContext';
 import { AuthContext } from '../../../contextStore/AuthContext';
 import { ToastContext } from '../../../contextStore/ToastContext';
+import { OfferContext } from '../../../contextStore/OfferContext';
 import { useHistory } from 'react-router';
 import { supabase } from 'backend/config';
 import { formatRelativeDate } from '../../../utils/formatters';
@@ -61,12 +62,15 @@ export default function View() {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const history = useHistory();
 
+  const { sentOffers } = useContext(OfferContext) || {};
   const userId = user?.id || user?.uid;
   const postUserId = postContent?.user_id || postContent?.userId;
 
   const { userDetails, viewerIsPremium } = useViewData(postContent, history, userId);
 
   if (!postContent || postUserId === undefined) return null;
+
+  const existingOffer = sentOffers?.find(o => o.productId === postContent.id);
 
   const imageList = postContent?.images?.length > 0 ? postContent.images : postContent?.url ? [postContent.url] : [];
   const isOwner = userId && postContent && userId === postUserId;
@@ -166,6 +170,7 @@ export default function View() {
               onOfferClick={!isOwner ? () => setShowOfferModal(true) : undefined}
               chatLoading={chatLoading}
               showOfferButton={postContent.status !== 'sold'}
+              hasOffer={!!existingOffer}
             />
           )}
           {!user && !isOwner && <p className="viewLoginToChat">Log in to chat with the seller.</p>}

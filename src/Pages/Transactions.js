@@ -45,7 +45,7 @@ function TransactionsPage() {
 
     async function fetchData() {
       if (tab === 'selling') {
-        // All products listed by this seller (queue + sold + active)
+        // All products listed by this seller
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -54,21 +54,54 @@ function TransactionsPage() {
 
         if (!error) setItems(data || []);
       } else {
-        // Items the user has contacted/started a conversation about (buying intent)
+        // Fetch actual purchases from transactions table
+        const { data: txs, error: txError } = await supabase
+          .from('transactions')
+          .select('id, created_at, amount, status, products(*), profiles!seller_id(name)')
+          .eq('buyer_id', userId)
+          .order('created_at', { ascending: false });
+
+        // Fetch inquiries (conversations without a completed transaction)
         const { data: convs, error } = await supabase
           .from('conversations')
           .select('*, products(*)')
           .eq('buyer_id', userId)
           .order('created_at', { ascending: false });
 
-        if (!error) {
-          setItems((convs || []).map(c => ({
-            ...c.products,
-            conversation_id: c.id,
-            conv_created_at: c.created_at,
-            seller_name: c.products?.seller_name || 'Seller',
-          })));
+        const purchases = [];
+        if (!txError && txs) {
+          txs.forEach(t => {
+            if (t.products) {
+               purchases.push({
+                 ...t.products,
+                 transaction_id: t.id,
+                 purchase_amount: t.amount,
+                 purchase_date: t.created_at,
+                 is_purchase: true,
+                 seller_name: t.profiles?.name || t.products?.seller_name || 'Seller'
+               });
+            }
+          });
         }
+
+        const inquiries = [];
+        if (!error && convs) {
+          // Filter out convs for products that were already purchased by this user
+          const purchasedProductIds = purchases.map(p => p.id);
+          convs.forEach(c => {
+            if (c.products && !purchasedProductIds.includes(c.products.id)) {
+              inquiries.push({
+                ...c.products,
+                conversation_id: c.id,
+                conv_created_at: c.created_at,
+                is_purchase: false,
+                seller_name: c.products?.seller_name || 'Seller',
+              });
+            }
+          });
+        }
+
+        setItems([...purchases, ...inquiries]);
       }
       setLoading(false);
     }
@@ -88,7 +121,9 @@ function TransactionsPage() {
 
   const queueItems  = tab === 'selling' ? items.filter(p => p.status === 'active' || p.status === 'pending') : [];
   const soldItems   = tab === 'selling' ? items.filter(p => p.status === 'sold') : [];
-  const buyingItems = tab === 'buying'  ? items : [];
+  
+  const purchasedItems = tab === 'buying' ? items.filter(p => p.is_purchase) : [];
+  const inquiryItems   = tab === 'buying' ? items.filter(p => !p.is_purchase) : [];
 
   return (
     <Layout>
@@ -143,22 +178,39 @@ function TransactionsPage() {
           </>
         ) : (
           /* BUYING */
-          <section>
-            <h2 style={{ fontSize: 16, margin: '24px 0 8px', color: '#374151' }}>
-              Items you've inquired about ({buyingItems.length})
-            </h2>
-            {buyingItems.length === 0 ? (
-              <p className="transactionsEmpty">
-                No buying history yet. Browse ads and chat with sellers to get started!
-              </p>
-            ) : (
-              <ul className="transactionsList">
-                {buyingItems.map(p => (
-                  <ProductRow key={p.conversation_id || p.id} product={p} role="buyer" />
-                ))}
-              </ul>
-            )}
-          </section>
+          <>
+            <section>
+              <h2 style={{ fontSize: 16, margin: '24px 0 8px', color: '#16a34a' }}>
+                🛍️ Purchased Items ({purchasedItems.length})
+              </h2>
+              {purchasedItems.length === 0 ? (
+                <p className="transactionsEmpty">No completed purchases yet.</p>
+              ) : (
+                <ul className="transactionsList">
+                  {purchasedItems.map(p => (
+                    <ProductRow key={p.transaction_id || p.id} product={p} role="buyer" />
+                  ))}
+                </ul>
+              )}
+            </section>
+            
+            <section>
+              <h2 style={{ fontSize: 16, margin: '24px 0 8px', color: '#374151' }}>
+                💭 Inquiries & Active Chats ({inquiryItems.length})
+              </h2>
+              {inquiryItems.length === 0 ? (
+                <p className="transactionsEmpty">
+                  No active inquiries. Browse ads and chat with sellers to get started!
+                </p>
+              ) : (
+                <ul className="transactionsList">
+                  {inquiryItems.map(p => (
+                    <ProductRow key={p.conversation_id || p.id} product={p} role="buyer" />
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
         )}
       </div>
     </Layout>
@@ -167,7 +219,11 @@ function TransactionsPage() {
 
 function ProductRow({ product, role }) {
   const thumb = product.thumbnail_url || (product.images || [])[0] || product.url;
-  const date = role === 'buyer' ? product.conv_created_at : (product.sold_at || product.created_at);
+  const date = product.is_purchase ? product.purchase_date : (role === 'buyer' ? product.conv_created_at : (product.sold_at || product.created_at));
+  
+  // Show the actual negotiated purchase amount if it exists, otherwise list price
+  const displayPrice = product.is_purchase && product.purchase_amount ? product.purchase_amount : product.price;
+
   return (
     <li className="transactionsItem">
       <div className="transactionsItemImage">
@@ -180,12 +236,19 @@ function ProductRow({ product, role }) {
         <p className="transactionsItemMeta">
           {role === 'buyer' ? `Seller: ${product.seller_name || '—'}` : `Listed by you`}
         </p>
-        <p className="transactionsItemAmount">{formatPrice(product.price)}</p>
+        <p className="transactionsItemAmount">{formatPrice(displayPrice)}</p>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
-          <StatusBadge status={product.status} />
+          {product.is_purchase ? (
+            <span style={{
+              background: '#16a34a', color: '#fff', borderRadius: 12,
+              padding: '2px 10px', fontSize: 12, fontWeight: 600,
+            }}>Purchased</span>
+          ) : (
+            <StatusBadge status={product.status} />
+          )}
           {date && <span className="transactionsItemDate">{formatDate(date)}</span>}
         </div>
-        {role === 'buyer' && (
+        {role === 'buyer' && !product.is_purchase && (
           <Link to={`/chat/${product.conversation_id}`} style={{ fontSize: 13, color: '#2563eb', marginTop: 4, display: 'inline-block' }}>
             💬 Continue chat
           </Link>

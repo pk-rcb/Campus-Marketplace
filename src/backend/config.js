@@ -113,7 +113,7 @@ export const createOffer = async (offerData) => {
       product_image: offerData.productImage,
       seller_id: offerData.sellerId,
       buyer_id: offerData.buyerId,
-      offer_amount: offerData.offerAmount,
+      amount: offerData.offerAmount,
       original_price: offerData.originalPrice,
       message: offerData.message,
       payment_method: offerData.paymentMethod,
@@ -125,15 +125,15 @@ export const createOffer = async (offerData) => {
 
   if (error) throw error;
 
-  // 2. Insert notification for seller
+  // 2. Insert notification for seller — link to the Received tab
   await createNotification({
     user_id: offerData.sellerId,
     type: 'offer_received',
     title: 'New Offer Received',
     body: `You received a new offer of ₹${offerData.offerAmount} for ${offerData.productName}`,
     image_url: offerData.productImage,
-    action_url: `/dashboard/offers`,
-    data: { offer_id: offer.id, product_id: offerData.productId },
+    action_url: `/dashboard/offers/received`,
+    data: { offerId: offer.id, productId: offerData.productId },
     priority: 'high'
   });
 
@@ -277,12 +277,28 @@ export const updateOfferStatus = async (offerId, status, amount) => {
 
   if (error) throw error;
 
+  // Insert into transactions table if the offer was accepted
+  if (status === 'accepted') {
+    const { error: txError } = await supabase.from('transactions').insert([{
+      product_id: offer.product_id,
+      seller_id: offer.seller_id,
+      buyer_id: offer.buyer_id,
+      offer_id: offer.id,
+      amount: offer.amount,
+      status: 'completed'
+    }]);
+    if (txError) console.error('Failed to record transaction:', txError);
+    
+    // Also mark the product as sold
+    await supabase.from('products').update({ status: 'sold', sold_at: new Date().toISOString() }).eq('id', offer.product_id);
+  }
+
   // Notify buyer about the status change
   let title = 'Offer Updated';
   let body = `Your offer for ${offer.product_name} was updated.`;
   if (status === 'accepted') {
     title = 'Offer Accepted!';
-    body = `Your offer of ₹${offer.offer_amount} for ${offer.product_name} was accepted!`;
+    body = `Your offer of ₹${offer.amount} for ${offer.product_name} was accepted!`;
   } else if (status === 'rejected') {
     title = 'Offer Declined';
     body = `Your offer for ${offer.product_name} was declined.`;
@@ -292,13 +308,13 @@ export const updateOfferStatus = async (offerId, status, amount) => {
   }
 
   await createNotification({
-    user_id: offer.buyer_id, // notify the buyer
+    user_id: offer.buyer_id, // notify the buyer — link to Sent tab
     type: `offer_${status}`,
     title,
     body,
     image_url: offer.product_image,
     action_url: `/dashboard/offers`,
-    data: { offer_id: offer.id, product_id: offer.product_id },
+    data: { offerId: offer.id, productId: offer.product_id },
     priority: status === 'accepted' ? 'high' : 'normal'
   });
 

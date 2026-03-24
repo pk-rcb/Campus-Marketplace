@@ -127,7 +127,12 @@ function ReceivedOffers() {
       ) : (
         <div className="offersPage__list">
           {filtered.map((offer) => (
-            <OfferCard key={offer.id} offer={offer} isSeller />
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              isSeller
+              onUpdate={() => window.location.reload()}
+            />
           ))}
         </div>
       )}
