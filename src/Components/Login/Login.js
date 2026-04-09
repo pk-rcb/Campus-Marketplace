@@ -7,7 +7,7 @@ import OverlaySpinner from '../Loading/OverlaySpinner';
 import { validateEmail, validatePassword } from '../../utils/validation';
 import './Login.css';
 
-const Logo = `${process.env.PUBLIC_URL || ''}/assets/images/olx-logo.png`;
+const Logo = `${process.env.PUBLIC_URL || ''}/assets/images/nit1.png`;
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -75,7 +75,7 @@ function Login() {
         </Link>
         <div className="loginParentDiv">
           <Link to="/" className="loginLogoLink">
-            <img width="80" height="80" src={Logo} alt="OLX" />
+            <img width="80" height="80" src={Logo} alt="NIT" />
           </Link>
           <form onSubmit={handleSubmit}>
             <div className="loginFormGroup">

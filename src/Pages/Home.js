@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import Banner from '../Components/Banner/Banner';
 import CategoryGrid from '../Components/Home/CategoryGrid';
-import LocationBanner from '../Components/Home/LocationBanner';
+import Hero from '../Components/Home/Hero';
 import QuickMenu from '../Components/Home/QuickMenu';
 import Layout from '../Components/Layout/Layout';
 import NearbyAds from '../Components/Location/NearbyAds';
@@ -71,7 +70,7 @@ function Home() {
   return (
     <Layout>
       <div className="homeParentDiv">
-        <LocationBanner />
+        <Hero />
         <CategoryGrid
           onSelectCategory={(name, id) =>
             history.push(
@@ -79,7 +78,6 @@ function Home() {
             )
           }
         />
-        <Banner />
         <QuickMenu products={quickMenuProducts} loading={productsLoading} />
         <Posts
           allPosts={allProducts}

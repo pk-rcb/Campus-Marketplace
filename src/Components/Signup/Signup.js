@@ -5,7 +5,7 @@ import OverlaySpinner from '../Loading/OverlaySpinner';
 import { ToastContext } from '../../contextStore/ToastContext';
 import { handleSocialSignUp, handleGuestContinue, handleSubmit as onSubmit } from './signupHandlers';
 
-const Logo = `${process.env.PUBLIC_URL || ''}/assets/images/olx-logo.png`;
+const Logo = `${process.env.PUBLIC_URL || ''}/assets/images/nit1.png`;
 
 export default function Signup() {
   const history = useHistory();

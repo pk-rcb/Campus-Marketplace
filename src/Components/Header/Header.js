@@ -1,9 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { useHistory, useLocation, Link } from 'react-router-dom';
 import './Header.css';
-import OlxLogo from '../../assets/OlxLogo';
 import SearchIcon from '../../assets/SearchIcon';
-import Arrow from '../../assets/Arrow';
 import SellButton from '../../assets/SellButton';
 import SellButtonPlus from '../../assets/SellButtonPlus';
 import { AuthContext } from '../../contextStore/AuthContext';
@@ -58,7 +56,7 @@ function Header() {
           <span />
         </button>
         <Link to="/" className="brandName" style={{ textDecoration: 'none' }}>
-          <h2 style={{ color: '#002f34', fontWeight: 'bold', margin: 0, fontSize: '24px' }}>Campus Marketplace</h2>
+          <h2 style={{ color: '#002f34', fontWeight: 'bold', margin: 0, fontSize: '24px' }}>NITroCart</h2>
         </Link>
         <div className="headerLocationWrap">
           <LocationDropdown />
@@ -117,10 +115,6 @@ function Header() {
               ))}
             </div>
           )}
-        </div>
-        <div className="headerLanguage">
-          <span>ENGLISH</span>
-          <Arrow />
         </div>
         <div className="headerRight">
           {user ? (

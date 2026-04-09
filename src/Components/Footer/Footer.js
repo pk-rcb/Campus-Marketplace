@@ -52,7 +52,7 @@ function Footer() {
             <h3 className="footerHeading">ABOUT US</h3>
             <ul className="footerList">
               <li>
-                <Link to="/about">About Campus Marketplace</Link>
+                <Link to="/about">About NITroCart</Link>
               </li>
               <li>
                 <Link to="/careers">Team</Link>
@@ -69,7 +69,7 @@ function Footer() {
             </ul>
           </div>
           <div className="footerColumn">
-            <h3 className="footerHeading">CAMPUS MARKET</h3>
+            <h3 className="footerHeading">NITROCART</h3>
             <ul className="footerList">
               <li>
                 <Link to="/help">Help</Link>
@@ -147,7 +147,7 @@ function Footer() {
       <div className="footerBottom">
         <div className="footerBottomInner">
           <p>Exclusively for NIT Durgapur Students & Faculty</p>
-          <p>Campus Marketplace © 2024 NIT Durgapur</p>
+          <p>NITroCart © 2024 NIT Durgapur</p>
         </div>
       </div>
     </div>
