@@ -8,19 +8,11 @@ import PostCards from '../PostCards/PostCards';
 import BarLoading from '../Loading/BarLoading';
 import './Dashboard.css';
 
-const PENDING_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-
 function getCreatedDate(product) {
   if (!product?.createdAt) return null;
   return product.createdAt.toDate
     ? product.createdAt.toDate()
     : new Date(product.createdAt);
-}
-
-function isPendingExpired(product) {
-  const created = getCreatedDate(product);
-  if (!created) return true;
-  return Date.now() - created.getTime() > PENDING_DURATION_MS;
 }
 
 function MyAds() {

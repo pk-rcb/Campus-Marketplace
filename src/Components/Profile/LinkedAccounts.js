@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { Database as Database } from 'backend/config';
+import { Database } from 'backend/config';
 import { AuthContext } from '../../contextStore/AuthContext';
 import { ToastContext } from '../../contextStore/ToastContext';
 import './LinkedAccounts.css';

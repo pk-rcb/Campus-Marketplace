@@ -1,9 +1,8 @@
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './Hero.css';
 
 function Hero() {
-  const history = useHistory();
 
   const handleExplore = (e) => {
     e.preventDefault();
